@@ -20,11 +20,11 @@ if "access_token" in token:
 def find(user_input):
     for employee in data['value']:
         if employee['mail'] and (employee['mail'].strip().lower() == user_input.strip().lower()):
-            print("User '"+user_input+"' found)
+            print("User '"+user_input+"' found")
             found = True
             return
     
-    print("User '"+user_input+"' not found\nContinue with account creation? (Yes/No)")
+    print('User '+user_input+' not found\nContinue with account creation? (Yes/No)')
     return input()
 
 
