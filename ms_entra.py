@@ -7,13 +7,11 @@ token = acquire_token()
 print("Search Email:")
 search_email = input()
 found = False
+endpoint = 'https://graph.microsoft.com/v1.0/users/'
 
 
 if "access_token" in token:
-    endpoint = 'https://graph.microsoft.com/v1.0/users/'
-
     r = requests.get(endpoint,headers={'Authorization': 'Bearer ' + token['access_token']})
-
     data = r.json()
 
 
@@ -30,11 +28,24 @@ def find(user_input):
 
 answer = find(search_email)
 
-if found == False and answer and answer.strip().lower() == 'yes':
-    
-    #add request post to create account
 
-    print('Account Created');
+if found == False and answer and answer.strip().lower() == 'yes':
+    account_params = {
+    "accountEnabled": True,
+    "displayName": "Test User",
+    "mailNickname": "Test-User",
+    "userPrincipalName": "Test-User@aytm.com",
+    "passwordProfile" : {
+        "forceChangePasswordNextSignIn": True,
+        "password": "vfGoA8250ga@"
+        }
+    }
+
+    r = requests.post(endpoint,headers={'Authorization': 'Bearer ' + token['access_token']}, json=account_params)
+
+
+    print(r.status_code)
+    print(r.text)
 else:
     print('Terminating')
 
