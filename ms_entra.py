@@ -1,51 +1,85 @@
 import requests
-import msal
+import time
+import sys
 from ms_token import acquire_token
 
 
 token = acquire_token()
-print("Search Email:")
-search_email = input()
-found = False
 endpoint = 'https://graph.microsoft.com/v1.0/users/'
 
+if "access_token" not in token:
+    sys.exit()
 
-if "access_token" in token:
-    r = requests.get(endpoint,headers={'Authorization': 'Bearer ' + token['access_token']})
-    data = r.json()
+#Searching functionality (implement later)
+#r = requests.get(endpoint,headers={'Authorization': 'Bearer ' + token['access_token']})
+#data = r.json()
+# 
+#def find(user_input):
+#    for employee in data['value']:
+#        if employee['mail'] and (employee['mail'].strip().lower() == user_input.strip().lower()):
+#            print("User '"+user_input+"' found")
+#            found = True
+#            return
 
+def check_update(endpoint, key, value):
+    print("\nWait up to 1 minute while user data updates\n")
+    counter = 0
+    while counter <= 10:
+        r = requests.get(endpoint,headers={'Authorization': 'Bearer ' + token['access_token']})
+        
+        if r.ok and r.json()[key] == value:
+            return True
+        else:
+            counter += 1
+            time.sleep(6)
 
-def find(user_input):
-    for employee in data['value']:
-        if employee['mail'] and (employee['mail'].strip().lower() == user_input.strip().lower()):
-            print("User '"+user_input+"' found")
-            found = True
-            return
+    return False
     
-    print('User '+user_input+' not found\nContinue with account creation? (Yes/No)')
-    return input()
-
-
-answer = find(search_email)
-
-
-if found == False and answer and answer.strip().lower() == 'yes':
-    account_params = {
-    "accountEnabled": True,
-    "displayName": "Test User",
-    "mailNickname": "Test-User",
-    "userPrincipalName": "Test-User@aytm.com",
-    "passwordProfile" : {
-        "forceChangePasswordNextSignIn": True,
-        "password": "vfGoA8250ga@"
+    
+account_params = {
+        "accountEnabled": True,
+        "displayName": "Test User",
+        "mailNickname": "Test-User",
+        "userPrincipalName": "Test-User@aytm.com",
+        "passwordProfile" : {
+            "forceChangePasswordNextSignIn": True,
+            "password": "vfGoA8250ga@"
+            }
         }
+ 
+additional_info = {
+        "usageLocation": "US"
     }
+  
+licenses = {
+        "addLicenses": [
+            {
+                "disabledPlans": [],
+                "skuId": "cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46"
+                },
+            ],
+        "removeLicenses": []
+        }
 
-    r = requests.post(endpoint,headers={'Authorization': 'Bearer ' + token['access_token']}, json=account_params)
+group = "Fill This In"
 
 
+print("Creaing Account")
+r = requests.post(endpoint,headers={'Authorization': 'Bearer ' + token['access_token']}, json=account_params)    
+print(r.status_code)
+print(r.text) 
+user_id = r.json()['id']
+
+if check_update(endpoint+user_id, "id", user_id) == True:
+    print("Adding usage location")
+    r = requests.patch(endpoint+user_id,headers={'Authorization': 'Bearer ' + token['access_token']}, json=additional_info)
     print(r.status_code)
     print(r.text)
-else:
-    print('Terminating')
+
+if check_update(endpoint+user_id+"?$select=usageLocation", "usageLocation", "US") == True:
+    print("Adding Licenses")
+    r = requests.post(endpoint+user_id+"/assignLicense",headers={'Authorization': 'Bearer ' + token['access_token']}, json=licenses)
+    print(r.status_code)
+    print(r.text)
+
 
