@@ -23,4 +23,5 @@ if "access_token" in token:
     if r.ok:
         print('Sent email successfully')
     else:
-        print(r.json())
+        print(r.status_code)
+        print(r.text)

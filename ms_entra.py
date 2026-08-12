@@ -7,6 +7,7 @@ from ms_token import acquire_token
 token = acquire_token()
 endpoint = 'https://graph.microsoft.com/v1.0/users/'
 laptop = "windows"
+user_id = -1
 
 if "access_token" not in token:
     sys.exit()
