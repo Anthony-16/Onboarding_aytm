@@ -17,6 +17,7 @@ credentials = service_account.Credentials.from_service_account_file(
     scopes=SCOPES,
 )
 
+#account needs permission to create users and assign groups
 delegated = credentials.with_subject("admin@aytm.com")
 
 delegated.refresh(Request())

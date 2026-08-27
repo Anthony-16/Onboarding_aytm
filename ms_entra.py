@@ -11,7 +11,6 @@ def create_pass():
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*_-+="
     return ''.join(secrets.choice(alphabet) for i in range(16))
 
-
 def check_update(endpoint, key, value):
     counter = 0
     while counter <= 10:
@@ -125,7 +124,6 @@ def find(user_input):
     
 
 
-
 token = acquire_token()
 endpoint = 'https://graph.microsoft.com/v1.0/users/'
 user_id = -1
@@ -142,7 +140,6 @@ counter = 0
 while(find(username) == True):
     counter = counter + 1
     username = split[0].lower() + "." + split[1][0].lower() + str(counter) + "@aytm.com".strip()
-
 
 f = open("data.py", "a")
 f.write('username="'+username+'"\n')

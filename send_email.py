@@ -4,6 +4,7 @@ from reportlab.pdfgen import canvas
 from ms_token import acquire_token
 from data import delivery,tracking,email,password,username
 
+#create the pdf with accout credentials
 pdf = canvas.Canvas("new_account.pdf")
 pdf.setTitle("New Account Login Info")
 pdf.drawString(100,750, "New Account Information")

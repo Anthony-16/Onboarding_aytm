@@ -8,6 +8,7 @@ import subprocess
 
 load_dotenv()
 
+#load keys from .env file
 bambooKey = os.getenv('bambooKey')
 url = "https://api.bamboohr.com/api/gateway.php/aytm/v1/employees/directory"
 auth = HTTPBasicAuth(bambooKey, 'Api Key')
@@ -19,6 +20,7 @@ r = requests.get(url, headers=headers, auth=auth)
 data = r.json()
 print(r.status_code)
 
+#find the employee and add data to data.py for later use 
 def find(user_input):
     f = open("data.py", "a")
     for employee in data['employees']:
