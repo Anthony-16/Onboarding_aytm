@@ -1,6 +1,10 @@
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
 import requests
+from data import username,name,password
+
+split = name.split()
+
 
 SCOPES = [
     "https://www.googleapis.com/auth/admin.directory.user",
@@ -13,7 +17,7 @@ credentials = service_account.Credentials.from_service_account_file(
     scopes=SCOPES,
 )
 
-delegated = credentials.with_subject("anthony@aytm.com")
+delegated = credentials.with_subject("admin@aytm.com")
 
 delegated.refresh(Request())
 
@@ -25,21 +29,27 @@ headers = {
 }
 
 json = {
-    "primaryEmail": "Test-user@aytm.com",
+    "primaryEmail": username,
     "name": {
-        "givenName": "New",
-        "familyName": "User"
+        "givenName": split[0],
+        "familyName": split[1]
     },
-    "password": "TempPassword123!"
+    "password": password
 }
 
 r = requests.post("https://admin.googleapis.com/admin/directory/v1/users",headers=headers,json=json)
-
 print(r.status_code)
 print(r.text)
 
+f = open("data.py", "a")
+
+if r.ok:
+    f.write("google_account_created = True\n")
+else:
+    f.write("google_account_created = False\n")
+
 json = {
-        "email": "Test-user@aytm.com",
+        "email": username,
         "role": "MEMBER"
 }
 
@@ -47,3 +57,10 @@ r = requests.post("https://admin.googleapis.com/admin/directory/v1/groups/01664s
 
 print(r.status_code)
 print(r.text)
+
+if r.ok:
+    f.write("default_google_group_assigned = True\n")
+else:
+    f.write("default_google_group_assigned = False\n")
+
+f.close()
