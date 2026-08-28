@@ -11,7 +11,7 @@ def create_pass():
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*_-+="
     return ''.join(secrets.choice(alphabet) for i in range(16))
 
-def check_update(endpoint, key, value):
+def check_update(endpoint, key, value, auth):
     counter = 0
     while counter <= 10:
         r = requests.get(endpoint,headers=auth)
@@ -25,51 +25,44 @@ def check_update(endpoint, key, value):
 
     return False
 
-
-def delete_account(user_id):
-    r = requests.delete(endpoint+user_id,headers=auth)
-    return r.status_code
-
-
-def create_account():
-
-    f = open("data.py", "a")
+def create_account(endpoint, auth, account_params, additional_info, licenses, variables):
+    output = ""
 
     #intial account creation
     r = requests.post(endpoint,headers=auth, json=account_params)      
-    print(r.status_code)
-    print(r.text)
+    output = output + str(r.status_code) + "\n"
+    output = output + r.text + "\n"
     if r.ok:
         user_id = r.json()['id']
-        f.write('ms_account_created=True\n')
+        variables['ms_account_created'] = True
     else:
         user_id=-1
-        f.write('ms_account_created=False\n')
+        variables['ms_account_created'] = False
 
 
     #add usage location
-    if check_update(endpoint+user_id, "id", user_id) == True:
+    if check_update(endpoint+str(user_id), "id", user_id, auth) == True:
         r = requests.patch(endpoint+user_id,headers=auth, json=additional_info)
-        print(r.text)
-        print(r.status_code)
+        output = output + str(r.status_code) + "\n"
+        output = output + r.text + "\n"
         if r.ok:
-            f.write('ms_usage_location_assigned=True\n')
+            variables['ms_usage_location_assigned'] = True
         else:
-            f.write('ms_usage_location_assigned=False\n')
+            variables['ms_usage_location_assigned'] = False
     else:
-        f.write('ms_usage_location_assigned=False\n')
+        variables['ms_usage_location_assigned'] = False
 
     #assign licenses
-    if check_update(endpoint+user_id+"?$select=usageLocation", "usageLocation", "US") == True:
+    if check_update(endpoint+str(user_id)+"?$select=usageLocation", "usageLocation", "US", auth) == True:
         r = requests.post(endpoint+user_id+"/assignLicense",headers=auth, json=licenses)
-        print(r.status_code)
-        print(r.text)
+        output = output + str(r.status_code) + "\n"
+        output = output + r.text + "\n"
         if r.ok:
-            f.write('ms_license_assigned=True\n')
+            variables['ms_license_assigned'] = True
         else:
-            f.write('ms_license_assigned=False\n')
+            variables['ms_license_assigned'] = False
     else:
-        f.write('ms_license_assigned=False\n')
+        variables['ms_license_assigned'] = False
 
     #assign group 
     group_url = "https://graph.microsoft.com/v1.0/groups/"
@@ -77,43 +70,42 @@ def create_account():
             "@odata.id": "https://graph.microsoft.com/v1.0/directoryObjects/"+user_id
     }
     r = requests.post(group_url+'6c2bfbec-a0ee-4846-b15f-570fce5daa5b/members/$ref',headers=auth, json=group)
-    print(r.status_code)
-    print(r.text)
+    output = output + str(r.status_code) + "\n"
+    output = output + r.text + "\n"
     
     if r.ok:
-        f.write('ms_default_group_assigned=True\n')
+        variables['ms_default_group_assigned'] = True
     else:
-        f.write('ms_default_group_assigned=False\n')
+        variables['ms_default_group_assigned'] = False
 
 
     #assign os specific group
-    if os == "Mac":
+    if variables['os'] == "Mac":
         r = requests.post(group_url+'2caa48fe-ed5b-44f1-932e-4c2eac735b4b/members/$ref',headers=auth, json=group)
-        print(r.status_code)        
-        print(r.text)
+        output = output + str(r.status_code) + "\n"        
+        output = output + r.text + "\n"
         if r.ok:
-            f.write('ms_os_group_assigned=True\n')
+            variables['ms_os_group_assigned'] = True
         else:
-            f.write('ms_os_group_assigned=False\n')
+            variables['ms_os_group_assigned'] = False
 
-    elif os == "Windows":
+    elif variables['os'] == "Windows":
         r = requests.post(group_url+'093942c4-d55e-4a00-b35c-753b7df1fbe9/members/$ref',headers=auth, json=group)
-        print(r.status_code)
-        print(r.text)
+        output = output + str(r.status_code) + "\n"
+        output = output + r.text + "\n"
         if r.ok:
-            f.write('ms_os_group_assigned=True\n')
+            variables['ms_os_group_assigned'] = True
         else:
-            f.write('ms_os_group_assigned=False\n')
+            variables['ms_os_group_assigned'] = False
         
-
-    f.close()
+    return output
     
 
-def find(user_input):
+def find(user_input, auth):
     url = 'https://graph.microsoft.com/v1.0/users/'
     
     while url:
-        r = requests.get(url,headers={'Authorization': 'Bearer ' + token['access_token']})
+        r = requests.get(url,headers=auth)
         data = r.json()
 
         for employee in data['value']:
@@ -122,60 +114,55 @@ def find(user_input):
         url = data.get("@odata.nextLink")
     return False
     
+def run_ms_entra(variables):
 
+    token = acquire_token()
+    endpoint = 'https://graph.microsoft.com/v1.0/users/'
+    user_id = -1
 
-token = acquire_token()
-endpoint = 'https://graph.microsoft.com/v1.0/users/'
-user_id = -1
+    if "access_token" not in token:
+        sys.exit()
 
-if "access_token" not in token:
-    sys.exit()
+    auth = {'Authorization': 'Bearer ' + token['access_token']}
 
-auth = {'Authorization': 'Bearer ' + token['access_token']}
+    split = variables['name'].split()
+    username = split[0].lower() + "." + split[1][0].lower() + "@aytm.com".strip()
+    counter = 0
 
-split = name.split()
-username = split[0].lower() + "." + split[1][0].lower() + "@aytm.com".strip()
-counter = 0
+    while(find(username, auth) == True):
+        counter = counter + 1
+        username = split[0].lower() + "." + split[1][0].lower() + str(counter) + "@aytm.com".strip()
 
-while(find(username) == True):
-    counter = counter + 1
-    username = split[0].lower() + "." + split[1][0].lower() + str(counter) + "@aytm.com".strip()
+    variables['username'] = username
+    variables['password'] = create_pass()
 
-f = open("data.py", "a")
-f.write('username="'+username+'"\n')
-
-
-password = create_pass()
-f.write('password="'+password+'"\n')
-
-f.close()
-
-account_params = {
-        "accountEnabled": True,
-        "displayName": name,
-        "mailNickname": split[0]+'-'+split[1],
-        "userPrincipalName": username,
-        "passwordProfile" : {
-            "forceChangePasswordNextSignIn": True,
-            "password": password
+    account_params = {
+            "accountEnabled": True,
+            "displayName": variables['name'],
+            "mailNickname": split[0]+'-'+split[1],
+            "userPrincipalName": variables['username'],
+            "passwordProfile" : {
+                "forceChangePasswordNextSignIn": True,
+                "password": variables['password']
+                }
             }
-        }
  
-additional_info = {
-        "usageLocation": location
-    }
-  
-licenses = {
-        "addLicenses": [
-            {
-                "disabledPlans": [],
-                "skuId": "cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46"
-                },
-            ],
-        "removeLicenses": []
+    additional_info = {
+            "usageLocation": variables['location']
         }
-
-create_account()
+  
+    licenses = {
+            "addLicenses": [
+                {
+                    "disabledPlans": [],
+                    "skuId": "cbdc14ab-d96c-4c30-b9f4-6ada7cdc1d46"
+                    },
+                ],
+            "removeLicenses": []
+            }
+    
+    out = create_account(endpoint, auth, account_params, additional_info, licenses, variables)
+    return out
 
 
 

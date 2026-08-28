@@ -1,31 +1,29 @@
 import os
 import requests
-from data import name,email,jobTitle,department,username
 from dotenv import load_dotenv
 
-load_dotenv()
-token = os.getenv('slack_token')
+def run_slack(variables):
+    load_dotenv()
+    token = os.getenv('slack_token')
 
-headers={
-            "Authorization": "Bearer "+token, 
-            "Content-Type": "application/json",
-         }
+    headers={
+                "Authorization": "Bearer "+token, 
+                "Content-Type": "application/json",
+            }
+    
+    json={
+            "channel": "CN2Q3SLR5",
+            "text": "Account Creation Successful for "+variables['name']+"\n"+variables['jobTitle']+"\n"+variables['department']+"\n"+variables['username'],
+        }
 
-json={
-        "channel": "CN2Q3SLR5",
-        "text": "Account Creation Successful for "+name+"\n"+jobTitle+"\n"+department+"\n"+username,
-    }
+    r = requests.post("https://slack.com/api/chat.postMessage", headers=headers, json=json)
 
-r = requests.post("https://slack.com/api/chat.postMessage", headers=headers, json=json)
+    output = str(r.status_code) + "\n"
+    output = output + r.text + "\n"
 
-print(r.status_code)
-print(r.text)
+    if r.ok:
+        variables['slack_msg_sent'] = True
+    else:
+        variables['slack_msg_sent'] = False
 
-f = open("data.py", "a")
-
-if r.ok:
-    f.write("slack_msg_sent = True\n")
-else:
-    f.write("slack_msg_sent = False\n")
-
-f.close()
+    return output

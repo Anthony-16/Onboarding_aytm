@@ -1,43 +1,44 @@
 import tkinter as tk
 from tkinter import ttk
+from pathlib import Path
 import sys
 import subprocess
+from bamboo import run_bamboo
+from google_workspace import run_google_workspace
+from ms_entra import run_ms_entra
+from send_email import run_send_email
+from slack import run_slack
+from final_output import run_final_output
 
 def submit_form():
-    name_text = name_entry.get()
-    email_text = email_entry.get()
-    tracking_text = tracking_num_entry.get()
-    delivery_text =  delivery_entry.get()
-    os_text = os_combobox.get()
-    location_text = location_entry.get()
+    variables = {"name": name_entry.get(), 
+                  "email": email_entry.get(), 
+                  "tracking": tracking_num_entry.get(), 
+                  "delivery": delivery_entry.get(), 
+                  "os": os_combobox.get(), 
+                  "location": location_entry.get(), 
+                  "jobTitle": "", 
+                  "department": "", 
+                  "username": "", 
+                  "password": "", 
+                  "ms_account_created": False,
+                  "ms_usage_location_assigned": False,
+                  "ms_license_assigned": False,
+                  "ms_default_group_assigned": False,
+                  "ms_os_group_assigned": False,
+                  "sent_email": False,
+                  "google_account_created": False,
+                  "default_google_group_assigned": False,
+                  "slack_msg_sent": False
+                  }
 
-    f = open("data.py", "w")
-    f.write("name = "+'"'+name_text+'"\n')
-    f.write("email = "+'"'+email_text+'"\n')
-    f.write("tracking = "+'"'+tracking_text+'"\n')
-    f.write("delivery = "+'"'+delivery_text+'"\n')
-    f.write("os = "+'"'+os_text+'"\n')
-    f.write("location = "+'"'+location_text+'"\n') 
-    f.close()
 
-
-    out = subprocess.run([sys.executable, "bamboo.py"], capture_output = True, text = True)    
-    output_entry.insert(tk.END, out.stdout)
-
-    out = subprocess.run([sys.executable, "ms_entra.py"], capture_output = True, text = True)    
-    output_entry.insert(tk.END, out.stdout)
-
-    out = subprocess.run([sys.executable, "send_email.py"], capture_output = True, text = True)    
-    output_entry.insert(tk.END, out.stdout)
-
-    out = subprocess.run([sys.executable, "google_workspace.py"], capture_output = True, text = True)    
-    output_entry.insert(tk.END, out.stdout)
-
-    out = subprocess.run([sys.executable, "slack.py"], capture_output = True, text = True)    
-    output_entry.insert(tk.END, out.stdout)
-
-    out = subprocess.run([sys.executable, "final_output.py"], capture_output = True, text = True)    
-    output_entry.insert(tk.END, out.stdout)
+    output_entry.insert(tk.END, run_bamboo(variables))
+    output_entry.insert(tk.END, run_ms_entra(variables))
+    output_entry.insert(tk.END, run_send_email(variables))
+    output_entry.insert(tk.END, run_google_workspace(variables))
+    output_entry.insert(tk.END, run_slack(variables))
+    output_entry.insert(tk.END, run_final_output(variables))
     
 
 def submit_auth():
