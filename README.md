@@ -2,10 +2,6 @@
 
 This project creates a microsoft account, google account, sends an email with account credentials, and sends slack messages in order to automate the new hire proccess at aytm
 
-# Requirements 
-
-The requirements to run the source code are listed in requirements.txt
-
 # Installation
 
 git clone https://github.com/Anthony-16/Onboarding_aytm.git
