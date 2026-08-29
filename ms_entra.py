@@ -4,8 +4,6 @@ import sys
 import string
 import secrets
 from ms_token import acquire_token
-from data import name,os,location
-
 
 def create_pass():
     alphabet = string.ascii_letters + string.digits + "!@#$%^&*_-+="
