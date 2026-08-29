@@ -16,7 +16,7 @@ python main.py
 
 # Building the Executable
 
-pyinstaller --onefile main.py
+pyinstaller --onefile main.py OR python -m PyInstaller --onefile main.py
 
 The result will be located in:
 
