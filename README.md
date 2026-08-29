@@ -12,8 +12,6 @@ pip install -r requirements.txt
 
 python main.py
 
-## or
-
 # Building the Executable
 
 pyinstaller --onefile main.py OR python -m PyInstaller --onefile main.py
