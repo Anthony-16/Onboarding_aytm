@@ -24,7 +24,6 @@ def run_bamboo(variables):
     return output
     
 
-#find the employee and add data to data.py for later use 
 def find(user_input, data, variables):
     for employee in data['employees']:
         if employee['displayName'] == user_input:
